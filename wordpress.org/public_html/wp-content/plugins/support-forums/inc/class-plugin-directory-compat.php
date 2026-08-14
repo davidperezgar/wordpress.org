@@ -5,6 +5,7 @@ namespace WordPressdotorg\Forums;
 class Plugin_Directory_Compat extends Directory_Compat {
 
 	const COMPAT = 'plugin';
+	const MINIMUM_ACTIVE_INSTALLS_FOR_REVIEWS = 100;
 
 	var $slug   = false;
 	var $plugin = null;
@@ -47,6 +48,30 @@ class Plugin_Directory_Compat extends Directory_Compat {
 
 	function status() {
 		return $this->plugin->post_status ?? '';
+	}
+
+	/**
+	 * Determines whether the plugin can receive new reviews.
+	 *
+	 * @return bool Whether the plugin has enough active installs for reviews.
+	 */
+	public function can_receive_reviews() {
+		global $wpdb;
+
+		if ( ! $this->plugin ) {
+			return false;
+		}
+
+		$active_installs = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT meta_value FROM {$wpdb->base_prefix}%d_postmeta WHERE post_id = %d AND meta_key = %s",
+				WPORG_PLUGIN_DIRECTORY_BLOGID,
+				$this->plugin->ID,
+				'active_installs'
+			)
+		);
+
+		return $active_installs >= self::MINIMUM_ACTIVE_INSTALLS_FOR_REVIEWS;
 	}
 
 	function forum_id() {
@@ -184,5 +209,19 @@ class Plugin_Directory_Compat extends Directory_Compat {
 	}
 
 	public function do_view_header() {
+		if ( ! bbp_is_single_view() || 'reviews' !== bbp_get_view_id() || $this->can_receive_reviews() ) {
+			return;
+		}
+
+		echo wp_kses_post(
+			sprintf(
+				'<div class="bbp-template-notice info"><p>%s</p></div>',
+				sprintf(
+					/* translators: %s: number of active installs required before reviews can be submitted. */
+					__( 'New reviews are available after this plugin reaches %s active installs.', 'wporg-forums' ),
+					number_format_i18n( self::MINIMUM_ACTIVE_INSTALLS_FOR_REVIEWS )
+				)
+			)
+		);
 	}
 }

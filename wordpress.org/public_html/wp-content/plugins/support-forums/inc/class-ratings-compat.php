@@ -218,6 +218,9 @@ class Ratings_Compat {
 
 		// Undo the above filter, for titles of replies to reviews. See #meta4254
 		add_filter( 'bbp_get_topic_last_topic_title', array( $this, 'undo_topic_title' ), 10, 1 );
+
+		$plugin_compat      = Plugin::get_instance()->plugins;
+		$can_submit_reviews = 'plugin' !== $this->compat || ! $plugin_compat || $plugin_compat->can_receive_reviews();
 ?>
 <div class="review-ratings">
 	<div>
@@ -225,7 +228,7 @@ class Ratings_Compat {
 		<?php echo do_blocks( '<!-- wp:wporg/ratings-stars /-->' ); ?>
 		<div class="reviews-submit-link">
 		<?php
-			if ( is_user_logged_in() ) {
+			if ( is_user_logged_in() && ( $can_submit_reviews || $this->review_exists() ) ) {
 				echo '<a href="#new-post" class="btn">';
 				if ( $this->review_exists() ) {
 					_e( 'Edit your review', 'wporg-forums' );
@@ -233,7 +236,7 @@ class Ratings_Compat {
 					_e( 'Add your own review', 'wporg-forums' );
 				}
 				echo '</a>';
-			} else {
+			} elseif ( $can_submit_reviews ) {
 				echo '<span class="reviews-need-login">';
 				printf(
 					/* translators: %s: login URL */
@@ -329,6 +332,19 @@ class Ratings_Compat {
 	 */
 	public function topic_pre_extras( $forum_id ) {
 		if ( Plugin::REVIEWS_FORUM_ID != $forum_id ) {
+			return;
+		}
+
+		$plugin_compat = Plugin::get_instance()->plugins;
+		if ( 'plugin' === $this->compat && $plugin_compat && ! $plugin_compat->can_receive_reviews() ) {
+			bbp_add_error(
+				'wporg_plugin_review_minimum_active_installs',
+				sprintf(
+					/* translators: %s: number of active installs required before reviews can be submitted. */
+					__( '<strong>Error:</strong> New reviews are available after this plugin reaches %s active installs.', 'wporg-forums' ),
+					number_format_i18n( Plugin_Directory_Compat::MINIMUM_ACTIVE_INSTALLS_FOR_REVIEWS )
+				)
+			);
 			return;
 		}
 

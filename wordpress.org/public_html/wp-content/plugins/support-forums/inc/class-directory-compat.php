@@ -763,6 +763,10 @@ abstract class Directory_Compat {
 			if ( 'plugin' === $this->compat() && 'publish' !== $this->status() ) {
 				$retval = false;
 			}
+
+			if ( 'plugin' === $this->compat() && ! bbp_is_topic_edit() && ! $this->can_receive_reviews() ) {
+				$retval = false;
+			}
 		}
 
 		return $retval;
