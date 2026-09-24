@@ -208,9 +208,14 @@ If you've gotten all the way down here and still think we should be hosting your
 		);
 	}
 
+	/**
+	 * Returns the rejection email content for scraping.
+	 *
+	 * @return string
+	 */
 	public function reason_scraping() {
 		return __(
-			"Your plugin has been rejected because it retrieves or extracts content from third-party websites by scraping it.
+			'Your plugin has been rejected because it retrieves or extracts content from third-party websites by scraping it.
 
 <strong>Why this is not permitted</strong>
 
@@ -224,7 +229,7 @@ https://developer.wordpress.org/plugins/wordpress-org/detailed-plugin-guidelines
 
 Please do not resubmit this plugin before corresponding with us. If you believe this decision was made in error, reply to this email with an explanation of how your plugin obtains and uses the content, along with documentation showing that the website owner permits that use.
 
-If the issue can be resolved, we will advise you on the appropriate next steps. Resubmitting without first communicating with us may result in further action against your account.",
+If the issue can be resolved, we will advise you on the appropriate next steps. Resubmitting without first communicating with us may result in further action against your account.',
 			'wporg-plugins'
 		);
 	}
